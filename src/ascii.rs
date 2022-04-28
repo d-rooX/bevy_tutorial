@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub const TILE_SIZE: f32 = 0.1;
+use crate::TILE_SIZE;
 
 pub struct AsciiSheet(pub Handle<TextureAtlas>);
 pub struct AsciiPlugin;

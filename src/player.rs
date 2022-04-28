@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
-use crate::ascii::{AsciiSheet, spawn_ascii_sprite, TILE_SIZE};
-
-pub const PLAYER_SPEED: f32 = 5.0;
+use crate::ascii::{AsciiSheet, spawn_ascii_sprite};
+use crate::{TILE_SIZE, PLAYER_SPEED};
 
 #[derive(Component, Inspectable)]
 pub struct Player {

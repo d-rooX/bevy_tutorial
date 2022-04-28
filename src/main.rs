@@ -14,6 +14,7 @@ mod tilemap;
 use player::PlayerPlugin;
 use debug::DebugPlugin;
 use ascii::AsciiPlugin;
+use tilemap::TileMapPlugin;
 
 fn main() {
     App::new()
@@ -30,6 +31,7 @@ fn main() {
         .add_plugin(PlayerPlugin)
         .add_plugin(DebugPlugin)
         .add_plugin(AsciiPlugin)
+        .add_plugin(TileMapPlugin)
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(spawn_camera)
         .run();

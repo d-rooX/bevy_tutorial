@@ -6,7 +6,10 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 pub const TILE_SIZE: f32 = 0.1;
 
 mod player;
+mod debug;
+
 use player::PlayerPlugin;
+use debug::DebugPlugin;
 
 fn main() {
     App::new()
@@ -21,6 +24,7 @@ fn main() {
         })
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
+        .add_plugin(DebugPlugin)
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(spawn_camera)
         .add_startup_system_to_stage(StartupStage::PreStartup, load_ascii)

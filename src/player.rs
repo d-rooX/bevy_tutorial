@@ -1,10 +1,11 @@
 use bevy::prelude::*;
-use crate::AsciiSheet;
-use crate::TILE_SIZE;
+use bevy_inspector_egui::Inspectable;
+
+use crate::ascii::{AsciiSheet, spawn_ascii_sprite, TILE_SIZE};
 
 pub const PLAYER_SPEED: f32 = 5.0;
 
-#[derive(Component)]
+#[derive(Component, Inspectable)]
 pub struct Player {
     speed: f32
 }
@@ -45,39 +46,26 @@ fn player_movement(
 }
 
 fn spawn_player(mut commands: Commands, ascii: Res<AsciiSheet>) {
-    // player sprite
-    let mut sprite = TextureAtlasSprite::new(1);
-    sprite.color = Color::rgb(0.7, 0.7, 0.7);
-    sprite.custom_size = Some(Vec2::splat(TILE_SIZE));
+    let player = spawn_ascii_sprite(
+        &mut commands,
+        &ascii,
+        1,
+        Color::rgb(0.8, 0.8, 0.8),
+        Vec3::new(0.0, 0.0, 900.0)
+    );
+    let background = spawn_ascii_sprite(
+        &mut commands,
+        &ascii,
+        0,
+        Color::rgb(0.0, 0.0, 0.0),
+        Vec3::new(0.0, 0.0, -1.0)
+    );
 
-    let player = commands.spawn_bundle( SpriteSheetBundle {
-        sprite,
-        texture_atlas: ascii.0.clone(),
-        transform: Transform {
-            translation: Vec3::new(0.0, 0.0, 900.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    })
+    commands.entity(background)
+        .insert(Name::new("Background"));
+
+    commands.entity(player)
         .insert(Name::new("Player"))
-        .insert(Player {
-            speed: PLAYER_SPEED
-        })
-        .id();
-
-    // background sprite
-    let mut background_sprite = TextureAtlasSprite::new(0);
-    background_sprite.color = Color::rgb(0., 0., 0.);
-    background_sprite.custom_size = Some(Vec2::splat(TILE_SIZE));
-
-    let background = commands.spawn_bundle( SpriteSheetBundle {
-        sprite: background_sprite,
-        texture_atlas: ascii.0.clone(),
-        transform: Transform {
-            translation: Vec3::new(0.0, 0.0, -1.0),
-            ..Default::default()
-        },
-        ..Default::default()
-    }).id();
-    commands.entity(player).push_children(&[background]);
+        .insert(Player { speed: PLAYER_SPEED })
+        .push_children(&[background]);
 }

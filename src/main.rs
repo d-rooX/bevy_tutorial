@@ -6,15 +6,21 @@ pub const RESOLUTION: f32 = 16.0 / 9.0;
 pub const PLAYER_SPEED: f32 = 5.0;
 pub const TILE_SIZE: f32 = 0.1;
 
-mod player;
-mod debug;
 mod ascii;
+mod debug;
+mod player;
 mod tilemap;
 
-use player::PlayerPlugin;
-use debug::DebugPlugin;
 use ascii::AsciiPlugin;
+use debug::DebugPlugin;
+use player::PlayerPlugin;
 use tilemap::TileMapPlugin;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum GameState {
+    Overworld,
+    Combat,
+}
 
 fn main() {
     App::new()
@@ -27,6 +33,7 @@ fn main() {
             resizable: false,
             ..Default::default()
         })
+        .add_state(GameState::Overworld)
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
         .add_plugin(DebugPlugin)

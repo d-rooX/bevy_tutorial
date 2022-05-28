@@ -5,6 +5,9 @@ use crate::ascii::{AsciiSheet, spawn_ascii_sprite};
 use crate::TILE_SIZE;
 
 #[derive(Component)]
+pub struct EncounterSpawner;
+
+#[derive(Component)]
 pub struct TileCollider;
 
 pub struct TileMapPlugin;
@@ -34,6 +37,9 @@ fn create_simple_map(mut commands: Commands, ascii: Res<AsciiSheet>) {
                 );
                 if char == '#' {
                     commands.entity(tile).insert(TileCollider);
+                }
+                else if char == '~' {
+                    commands.entity(tile).insert(EncounterSpawner);
                 }
                 tiles.push(tile);
             }

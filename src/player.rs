@@ -60,6 +60,14 @@ fn show_player(
     }
 }
 
+fn test_exit_combat(keyboard: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
+    if keyboard.just_pressed(KeyCode::Space) {
+        state
+            .set(GameState::Overworld)
+            .expect("Failed to change state");
+    }
+}
+
 fn player_movement(
     mut player_query: Query<(&Player, &mut Transform)>,
     wall_query: Query<&Transform, (With<TileCollider>, Without<Player>)>,

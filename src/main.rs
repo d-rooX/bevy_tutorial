@@ -10,11 +10,13 @@ mod ascii;
 mod debug;
 mod player;
 mod tilemap;
+mod combat;
 
 use ascii::AsciiPlugin;
 use debug::DebugPlugin;
 use player::PlayerPlugin;
 use tilemap::TileMapPlugin;
+use combat::CombatPlugin;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum GameState {
@@ -39,6 +41,7 @@ fn main() {
         .add_plugin(DebugPlugin)
         .add_plugin(AsciiPlugin)
         .add_plugin(TileMapPlugin)
+        .add_plugin(CombatPlugin)
         .add_system(bevy::input::system::exit_on_esc_system)
         .add_startup_system(spawn_camera)
         .run();

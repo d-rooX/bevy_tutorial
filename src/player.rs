@@ -1,15 +1,20 @@
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
-use bevy_inspector_egui::egui::Event::Key;
 use bevy_inspector_egui::Inspectable;
 
 use crate::ascii::{spawn_ascii_sprite, AsciiSheet};
 use crate::tilemap::{EncounterSpawner, TileCollider};
 use crate::{GameState, PLAYER_SPEED, TILE_SIZE};
 
+#[derive(Component)]
+pub struct EncounterTracker {
+    timer: Timer,
+}
+
 #[derive(Component, Inspectable)]
 pub struct Player {
     speed: f32,
+    just_moved: bool,
 }
 
 pub struct PlayerPlugin;
@@ -23,8 +28,7 @@ impl Plugin for PlayerPlugin {
                     .with_system(camera_follow.after("movement"))
                     .with_system(player_encounter_checking.after("movement")),
             )
-            .add_startup_system(spawn_player)
-            .add_system(test_exit_combat);
+            .add_startup_system(spawn_player);
     }
 }
 
@@ -60,22 +64,15 @@ fn show_player(
     }
 }
 
-fn test_exit_combat(keyboard: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
-    if keyboard.just_pressed(KeyCode::Space) {
-        state
-            .set(GameState::Overworld)
-            .expect("Failed to change state");
-    }
-}
-
 fn player_movement(
-    mut player_query: Query<(&Player, &mut Transform)>,
+    mut player_query: Query<(&mut Player, &mut Transform)>,
     wall_query: Query<&Transform, (With<TileCollider>, Without<Player>)>,
     input: Res<Input<KeyCode>>,
     time: Res<Time>,
 ) {
     let delta = time.delta_seconds();
-    let (player, mut transform) = player_query.single_mut();
+    let (mut player, mut transform) = player_query.single_mut();
+    player.just_moved = false;
     let mut velocity = Vec3::splat(0.0);
     let speed = TILE_SIZE * player.speed * delta;
 
@@ -93,9 +90,12 @@ fn player_movement(
     }
 
     let target = transform.translation + velocity.clamp_length(0.0, speed);
+    if velocity != Vec3::splat(0.0) {
+        player.just_moved = true;
+    }
     if !wall_query
         .iter()
-        .any(|&w_tranform| wall_collision_check(target, w_tranform.translation))
+        .any(|&w_transform| wall_collision_check(target, w_transform.translation))
     {
         transform.translation = target;
     }
@@ -119,16 +119,21 @@ fn wall_collision_check(target_player_pos: Vec3, wall_translation: Vec3) -> bool
 }
 
 fn player_encounter_checking(
-    player_query: Query<&Transform, With<Player>>,
+    mut player_query: Query<(&Player, &Transform, &mut EncounterTracker)>,
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
     mut state: ResMut<State<GameState>>,
+    time: Res<Time>,
 ) {
-    let player_translation = player_query.single().translation;
-    if encounter_query
-        .iter()
-        .any(|&tile_transform| wall_collision_check(player_translation, tile_transform.translation))
+    let (player, transform, mut encounter_tracker) = player_query.single_mut();
+
+    if player.just_moved {
+        encounter_tracker.timer.tick(time.delta());
+    }
+    if encounter_query.iter().any(|&tile_transform| {
+        wall_collision_check(transform.translation, tile_transform.translation)
+    }) && encounter_tracker.timer.just_finished()
     {
-        println!("Changing state");
+        encounter_tracker.timer.reset();
         state
             .set(GameState::Combat)
             .expect("Failed to change states");
@@ -158,6 +163,10 @@ fn spawn_player(mut commands: Commands, ascii: Res<AsciiSheet>) {
         .insert(Name::new("Player"))
         .insert(Player {
             speed: PLAYER_SPEED,
+            just_moved: false,
+        })
+        .insert(EncounterTracker {
+            timer: Timer::from_seconds(1.0, true),
         })
         .push_children(&[background]);
 }

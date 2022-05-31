@@ -5,6 +5,7 @@ use bevy_inspector_egui::Inspectable;
 use crate::ascii::{spawn_ascii_sprite, AsciiSheet};
 use crate::tilemap::{EncounterSpawner, TileCollider};
 use crate::{GameState, PLAYER_SPEED, TILE_SIZE};
+use crate::fadeout::create_fadeout;
 
 #[derive(Component)]
 pub struct EncounterTracker {
@@ -121,7 +122,8 @@ fn wall_collision_check(target_player_pos: Vec3, wall_translation: Vec3) -> bool
 fn player_encounter_checking(
     mut player_query: Query<(&Player, &Transform, &mut EncounterTracker)>,
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
-    mut state: ResMut<State<GameState>>,
+    mut commands: Commands,
+    ascii: Res<AsciiSheet>,
     time: Res<Time>,
 ) {
     let (player, transform, mut encounter_tracker) = player_query.single_mut();
@@ -134,9 +136,7 @@ fn player_encounter_checking(
     }) && encounter_tracker.timer.just_finished()
     {
         encounter_tracker.timer.reset();
-        state
-            .set(GameState::Combat)
-            .expect("Failed to change states");
+        create_fadeout(&mut commands, GameState::Combat, &ascii);
     }
 }
 

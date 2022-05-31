@@ -1,6 +1,7 @@
 use crate::GameState;
 use bevy::prelude::*;
 use crate::ascii::{AsciiSheet, spawn_ascii_sprite};
+use crate::fadeout::create_fadeout;
 
 pub struct CombatPlugin;
 
@@ -57,10 +58,12 @@ fn combat_camera(
     camera_transform.translation.y = 0.0;
 }
 
-fn test_exit_combat(keyboard: Res<Input<KeyCode>>, mut state: ResMut<State<GameState>>) {
+fn test_exit_combat(
+    mut commands: Commands,
+    ascii: Res<AsciiSheet>,
+    keyboard: Res<Input<KeyCode>>,
+) {
     if keyboard.just_pressed(KeyCode::Space) {
-        state
-            .set(GameState::Overworld)
-            .expect("Failed to change state");
+        create_fadeout(&mut commands, GameState::Overworld, &ascii);
     }
 }

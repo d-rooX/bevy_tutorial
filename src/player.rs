@@ -16,6 +16,7 @@ pub struct EncounterTracker {
 pub struct Player {
     speed: f32,
     just_moved: bool,
+    active: bool
 }
 
 pub struct PlayerPlugin;
@@ -50,11 +51,11 @@ fn hide_player(
 }
 
 fn show_player(
-    mut player_query: Query<&mut Visibility, With<Player>>,
+    mut player_query: Query<(&mut Visibility, &mut Player)>,
     children_query: Query<&Children, With<Player>>,
     mut child_visibility_query: Query<&mut Visibility, Without<Player>>,
 ) {
-    let mut player_visibility = player_query.single_mut();
+    let (mut player_visibility, mut player) = player_query.single_mut();
     player_visibility.is_visible = true;
     if let Ok(children) = children_query.get_single() {
         for child in children.iter() {
@@ -63,6 +64,7 @@ fn show_player(
             }
         }
     }
+    player.active = true;
 }
 
 fn player_movement(
@@ -74,6 +76,10 @@ fn player_movement(
     let delta = time.delta_seconds();
     let (mut player, mut transform) = player_query.single_mut();
     player.just_moved = false;
+    if !player.active {
+        return;
+    }
+
     let mut velocity = Vec3::splat(0.0);
     let speed = TILE_SIZE * player.speed * delta;
 
@@ -120,13 +126,13 @@ fn wall_collision_check(target_player_pos: Vec3, wall_translation: Vec3) -> bool
 }
 
 fn player_encounter_checking(
-    mut player_query: Query<(&Player, &Transform, &mut EncounterTracker)>,
+    mut player_query: Query<(&mut Player, &Transform, &mut EncounterTracker)>,
     encounter_query: Query<&Transform, (With<EncounterSpawner>, Without<Player>)>,
     mut commands: Commands,
     ascii: Res<AsciiSheet>,
     time: Res<Time>,
 ) {
-    let (player, transform, mut encounter_tracker) = player_query.single_mut();
+    let (mut player, transform, mut encounter_tracker) = player_query.single_mut();
 
     if player.just_moved {
         encounter_tracker.timer.tick(time.delta());
@@ -136,6 +142,7 @@ fn player_encounter_checking(
     }) && encounter_tracker.timer.just_finished()
     {
         encounter_tracker.timer.reset();
+        player.active = false;
         create_fadeout(&mut commands, GameState::Combat, &ascii);
     }
 }
@@ -164,6 +171,7 @@ fn spawn_player(mut commands: Commands, ascii: Res<AsciiSheet>) {
         .insert(Player {
             speed: PLAYER_SPEED,
             just_moved: false,
+            active: true
         })
         .insert(EncounterTracker {
             timer: Timer::from_seconds(1.0, true),

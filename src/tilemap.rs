@@ -3,7 +3,7 @@ use crate::player::Player;
 use crate::{GameState, TILE_SIZE};
 use bevy::prelude::*;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader};
 
 #[derive(Component)]
 pub struct Map;
